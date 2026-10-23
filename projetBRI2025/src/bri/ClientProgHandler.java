@@ -23,12 +23,12 @@ class ClientProgHandler implements Runnable {
 	private Prog progAssociated;
 	static {
 		registreServices= new Vector<Class<? extends Service>>();
+		Thread.currentThread().getId();
+
 	}
 	private static Vector<Class<? extends Service>> registreServices;
 	ClientProgHandler(Socket socket) {
 		try{
-			closeEverything();
-
 			this.socket = socket;
 			this.bufferedReader = new BufferedReader (new InputStreamReader(socket.getInputStream()));
 			this.bufferedWriter = new BufferedWriter (new OutputStreamWriter(socket.getOutputStream()));
@@ -41,7 +41,18 @@ class ClientProgHandler implements Runnable {
 		try {
 			
 			associateProg(bufferedReader.readLine());
-			progAction(bufferedReader.readLine());
+			boolean continueBoucle = true;
+			String inputUser;
+			while(continueBoucle) {
+				inputUser = bufferedReader.readLine();
+				
+				continueBoucle = progAction(inputUser);
+				System.out.println(continueBoucle);
+			}
+			closeEverything();
+			Thread.currentThread().interrupt();
+			System.out.println(Thread.currentThread().isInterrupted());
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (InterruptedException e) {
@@ -51,47 +62,105 @@ class ClientProgHandler implements Runnable {
 	}
 	
 	
-	private void progAction(String choix) {	
+	private boolean progAction(String choix) {	
 		int userValue = Integer.parseInt(choix);
 		switch (userValue) {
+		case 0:
+			return false;
 		case 1: //FOURNIR_SERVICE
 			try {
-			fournirService(bufferedReader.readLine());
-			}catch (NoServiceException e) {
-				System.err.println(e);
-			}catch (MalformedURLException e) {
-				
+				boolean serviceValide = false;
+				while(!serviceValide) {
+					try {
+						fournirService(bufferedReader.readLine());
+						serviceValide= true;
+						bufferedWriter.write("true");
+						bufferedWriter.newLine();
+						bufferedWriter.flush();
+					}catch (NoServiceException e) {
+						System.err.println(e);
+						bufferedWriter.write("false");
+						bufferedWriter.newLine();
+						bufferedWriter.flush();
+					}catch (MalformedURLException e) {	
+					}	
+				}
 			}catch (IOException e) {
 				e.printStackTrace();
-				closeEverything();
+				return false;
 			}
-			break; 
+			return true;
 		case 2: //MAJ_SERVICE
-			break;
+			try {
+				bufferedWriter.write(ServiceRegistry.toStringue(progAssociated));
+				bufferedWriter.newLine();
+				bufferedWriter.flush();
+				String serviceChangeStr = bufferedReader.readLine();
+				int serviceChangeStatus = Integer.parseInt(serviceChangeStr);
+				ServiceRegistry.changeStatus(serviceChangeStatus, progAssociated);
+			}catch (IOException e) {
+				return false;			
+			}catch (IndexOutOfBoundsException e) {
+				
+			}
+			return true;
 		case 3: //CHANGER_PORT_FTP
-			break;
-		case 4: //Désintaller/Arreter_SERVICE
-			break;
+			try {
+				String portFtpStr = bufferedReader.readLine();
+				int portFtpNew = Integer.parseInt(portFtpStr);
+				System.out.println("Port du user changé : " + this.progAssociated.getFtpPort());
+				changerPortFtp(portFtpNew);
+				System.out.println(" ---> " + this.progAssociated.getFtpPort());
+			}catch (IOException e) {
+				return false;			
+			}
+			return true;
+		case 4: //Démarrer/Arreter_SERVICE
+			try {
+				bufferedWriter.write(ServiceRegistry.toStringue(progAssociated));
+				bufferedWriter.newLine();
+				bufferedWriter.flush();
+				String serviceChangeStr = bufferedReader.readLine();
+				int serviceChangeStatus = Integer.parseInt(serviceChangeStr);
+				ServiceRegistry.changeStatus(serviceChangeStatus, progAssociated);
+			}catch (IOException e) {
+				return false;			
+			}catch (IndexOutOfBoundsException e) {
+				
+			}
+			return true;
 		case 5: //DESINSTALLER_SERVICE
-			break;
+			return true;
 		default:
-			break;
+			return false;
 		}
 	}
 
-	private void fournirService(String inputUser) throws NoServiceException, MalformedURLException {
+	private synchronized void changerPortFtp(int portFtpNew) {
+		this.progAssociated.setFtpPort(portFtpNew);
+	}
+
+	private synchronized void fournirService(String inputUser) throws NoServiceException {
 		String fileNameURL = "ftp://localhost:" +Integer.toString(this.progAssociated.getFtpPort())
-		+  "/" + this.progAssociated.getLogin();
+		+  "/" + this.progAssociated.getLogin() + "/";
+		System.out.println(fileNameURL);
+		try {
 		URLClassLoader urlcl = URLClassLoader.newInstance(
 				new URL[] { new URL(fileNameURL)});
-
-		try {
+		
 			ServiceRegistry.addService(
-					urlcl.loadClass(inputUser).asSubclass(Service.class));
+					urlcl.loadClass(inputUser).asSubclass(Service.class), this.progAssociated);
 			System.out.println("Classe chargée");
-		} catch (Exception e) {
+		}catch (MalformedURLException e) {
+			System.err.println(e);
+			e.printStackTrace();
+		}catch (ClassNotFoundException e) {
+			e.printStackTrace();
 			throw new NoServiceException();		
-			}
+		}catch (RuntimeException e) {
+			System.err.println(e);
+		}
+	
 	}
 
 	private void associateProg(String choix) throws IOException, InterruptedException {
@@ -142,6 +211,7 @@ class ClientProgHandler implements Runnable {
 			}
 		
 	}
+	
 	private Prog inscription() throws ProgDejaPresentException {
 		Prog progInput = null;
 		try {
@@ -170,6 +240,7 @@ class ClientProgHandler implements Runnable {
 		System.out.println("Compte crée");
 		return progInput;
 	}
+	
 	private Prog connexion() throws FailedLoginException {
 		Prog prog = null;
 		try {
@@ -198,6 +269,7 @@ class ClientProgHandler implements Runnable {
 		return prog;
 	}
 	private void closeEverything() {
+		System.err.println("ON FERME TOUT");
 		try {
 			if (bufferedReader != null)
 				bufferedReader.close();

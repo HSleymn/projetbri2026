@@ -8,18 +8,20 @@ import java.net.Socket;
 import java.util.List;
 import java.util.Vector;
 
+import prog.Prog;
+
 public class ServiceRegistry {
 	// cette classe est un registre de services
 	// partagee en concurrence par les clients et les "ajouteurs" de services,
 	// un Vector pour cette gestion est pratique
 
 	static {
-		registreServices= new Vector<Class<? extends Service>>();
+		registreServices= new Vector<ServiceUploaded>();
 	}
-	private static Vector<Class<? extends Service>> registreServices;
+	private static Vector<ServiceUploaded> registreServices;
 
 // ajoute une classe de service apr�s contr�le de la norme BLTi
-	public static void addService(Class<? extends Service> serviceAjout) {
+	public static void addService(Class<? extends Service> serviceAjout, Prog progUploader) {
 		// vérifier la conformité par introspection
 		String errorMessage = "";
 		
@@ -90,25 +92,66 @@ public class ServiceRegistry {
 		if (errorMessage.length() !=0)
 			throw new RuntimeException(errorMessage);
 		// si conforme, ajout au vector
-		registreServices.add(serviceAjout);
+		
+		registreServices.add(new ServiceUploaded(serviceAjout, progUploader));
 	}
 	
 // renvoie la classe de service (numService -1)	
 	public static Class<? extends Service> getServiceClass(int numService) {
 		int indexService = numService-1;
-		
 		if(indexService<0)
 			throw new IndexOutOfBoundsException();
 		
-		return registreServices.get(indexService);
+		return registreServices.get(indexService).getService();
 		
 	}
+	public static Class<? extends Service> getServiceClass(int numService, Prog prog) {
+		int indexService = numService-1;
+		
+		if (indexService == 0 || numService > registreServices.size())
+			throw new IndexOutOfBoundsException();
+		
+		for (int i=0; i<registreServices.size(); i++) 
+			if (registreServices.get(i).getProg().equals(prog) && i == (indexService)) 
+				return registreServices.get(indexService).getService();
+			
+		return null;
+	}
 	
+	public static String toStringue(Prog prog) {
+		String result = "";
+		for (int i=0; i<registreServices.size(); i++) 
+			if (registreServices.get(i).getProg().equals(prog))
+				result += Integer.toString(i+1) + " - " +  
+			registreServices.get(i).getService().getSimpleName() + " -- " + registreServices.get(i).getStatusString();
+		
+		return result;
+	}
+	public static void changeStatus(int choix, Prog prog) {
+		if (choix == 0 || choix > registreServices.size())
+			throw new IndexOutOfBoundsException();
+		for (int i=0; i<registreServices.size(); i++) {
+			if (registreServices.get(i).getProg().equals(prog) && i == (choix-1)) {
+				registreServices.get(i).setStatus(false);
+				break;
+			}}
+	}
+	
+	public static void updateService(Class<? extends Service> serviceUpdate, Prog prog, int serviceIdChangement) {	
+		for (int i=0; i<registreServices.size(); i++) {
+			if (registreServices.get(i).getProg().equals(prog) && i == (serviceIdChangement-1)) {
+				registreServices.get(i).setService(serviceUpdate);	
+				break;
+			}}
+	}
 // liste les activit�s pr�sentes
 	public static String toStringue() {
-		String result = "Activités présentesos :##";
-		for (int i=0; i<registreServices.size(); i++)
-			result += Integer.toString(i+1) + " - " +  registreServices.get(i).getSimpleName();
+		String result = "Activités présentes :\n";
+		for (int i=0; i<registreServices.size(); i++) 
+			if (registreServices.get(i).getStatus() == true)
+				//result += Integer.toString(i+1) + " - " +  registreServices.get(i).getService().getSimpleName() + " -- " + registreServices.get(i).getProg().getLogin();
+		result += Integer.toString(i+1) + " - " +  registreServices.get(i).getService().getSimpleName() + " -- " + registreServices.get(i).getStatus();
+
 		return result;
 	}
 

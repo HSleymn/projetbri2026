@@ -21,8 +21,8 @@ public class BRiLaunch {
 		System.out.println("Bienvenue dans votre gestionnaire dynamique d'activité BRi");
 		System.out.println("Pour ajouter une activité, celle-ci doit être présente sur votre serveur ftp");
 		
-		new Thread(new ServeurBRiClientProg(PORT_PROG)).start();
-		new Thread(new ServeurBRiClientAma(PORT_AMA)).start();
+		new Thread(new ServeurBRiClientProg(PORT_PROG), "prog").start();
+		new Thread(new ServeurBRiClientAma(PORT_AMA), "ama").start();
 
 			
 	}

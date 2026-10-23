@@ -4,6 +4,7 @@ package bri;
 import java.io.*;
 import java.net.*;
 import java.util.Scanner;
+import java.util.Set;
 
 import prog.IProg;
 
@@ -32,6 +33,8 @@ public class ServeurBRiClientProg implements Runnable {
 					Socket socket = listen_socket.accept();
 					new Thread(new ClientProgHandler(socket)).start();
 					System.out.println("Un client s'est connecté.");
+					//Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
+					System.out.println(Thread.activeCount());
 				}
 			catch (Exception e) {
 					e.printStackTrace();				
@@ -61,6 +64,6 @@ public class ServeurBRiClientProg implements Runnable {
 	}
 
 	public void lancer() {
-		(new Thread(this)).start();		
+		(new Thread(this, "prog")).start();		
 	}
 }

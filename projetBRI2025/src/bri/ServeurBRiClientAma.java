@@ -21,7 +21,24 @@ public class ServeurBRiClientAma implements Runnable {
 	// pour chaque connection, il cree un ServiceInversion, 
 	// qui va la traiter.
 	public void run() {
+		System.out.println("j'ouvre le serveur BRI aux amateurs sur le port " + listen_socket.getLocalPort());	
+		while(!listen_socket.isClosed()) {
 
+			try {
+					Socket socket = listen_socket.accept();
+					new Thread(new ClientAmaHandler(socket)).start();
+					System.out.println("Un amateur s'est connecté.");
+				}
+			catch (Exception e) {
+					e.printStackTrace();				
+					}
+//			 catch (IOException e) {
+//				e.printStackTrace();
+//			} catch (NullPointerException e) {
+//				System.err.println("aaaaaaaaaaaaaaaaaaaaaaa");
+//			}
+		}
+			
 	}
 
 	 // restituer les ressources --> finalize

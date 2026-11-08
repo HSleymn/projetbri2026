@@ -36,7 +36,7 @@ class ApplicationProg {
 				choix = (String) clavier.readLine();
 				choixValide = choix.length()==1 && (choix.equals("c") || choix.equals("i"));
 				if(!choixValide) {
-					System.out.println("Veuillez faire un choix valide." + choix.length() + choix.equals("c"));
+					System.out.println("Veuillez faire un choix valide.");
 				}
 
 			}				
@@ -92,7 +92,7 @@ class ApplicationProg {
 			
 			while (continueBoucle) {
 				choixDisplay();
-				choice = numberFormatChecker(clavier);
+				choice = numberFormatChecker(clavier, 5, 0);
 				sout.println(choice);
 				switch (choice) {
 					case 0:
@@ -101,10 +101,10 @@ class ApplicationProg {
 					case 1: //FOURNIR_SERVICE
 						boolean serviceValide = false;
 						while(!serviceValide) {
+							System.out.println("Veuillez entrer le nom de votre classe (nom_du_package.nom_de_la_classe)");
 							String input = clavier.readLine();
 							sout.println(input);
 							serviceValide = Boolean.parseBoolean(sin.readLine());
-							System.out.println(serviceValide);
 							if (!serviceValide) {
 								String str = sin.readLine();
 
@@ -142,13 +142,12 @@ class ApplicationProg {
 						sout.println(newPort);
 						if(!Boolean.parseBoolean(sin.readLine())) {
 							System.err.println(sin.readLine());
-						}
+						}else
 
-						System.out.println(sin.readLine());
+							System.out.println(sin.readLine());
 						break;
 					case 4: //Démarrer/Arreter_SERVICE
 						int nbService = Integer.parseInt(sin.readLine());
-						System.out.println(nbService);
 						if(nbService==0) {
 							System.err.println("Vous devez fournir un service pour pouvoir modifier son état.");
 							break;
@@ -163,6 +162,10 @@ class ApplicationProg {
 						break;
 					case 5: //DESINSTALLER_SERVICE
 						int nbServiceD = Integer.parseInt(sin.readLine());
+						if(nbServiceD==0) {
+							System.err.println("Vous devez fournir un service pour pouvoir le désinstaller.");
+							break;
+						}
 						System.out.println(sin.readLine());
 
 						if(nbServiceD==0) {
@@ -176,14 +179,12 @@ class ApplicationProg {
 				
 				}
 			}
-			System.out.println("fin");
-			return;
-		}
+			
+			return;}
 		catch (IOException e) { System.err.println("Fin de la connexion"); }
 		// Refermer dans tous les cas la socket
 		try { if (s != null) s.close(); } 
 		catch (IOException e2) { ; }		
-	
 	
 	
 	
@@ -227,5 +228,23 @@ class ApplicationProg {
 		}
 		return number;
 	}
+	private static int numberFormatChecker(BufferedReader clavier, int max, int min) throws IOException {
+		int number=0;
+		boolean numberFormatValide = false;
+		while(!numberFormatValide) {
+			try {
+				number = Integer.parseInt(clavier.readLine());
+				if(number >= min&& number <= max)
+					numberFormatValide=true;
+				else
+					System.err.println("Veuillez entrer un nombre parmi les choix possibles.");
+			}catch(NumberFormatException e) {
+				System.err.println("Erreur de format, veuillez entrer un nombre.");
+
+			}
+		}
+		return number;
+	}
+
 
 }

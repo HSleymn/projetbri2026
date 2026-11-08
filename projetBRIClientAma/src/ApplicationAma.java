@@ -32,7 +32,7 @@ class ApplicationAma {
 			
 				listen(s, sin);
 				while (s.isConnected())
-				sout.println(clavier.readLine());
+					sout.println(clavier.readLine());
 								
 				
 			
@@ -45,7 +45,7 @@ class ApplicationAma {
 	}
 	
 	public static void listen(Socket s, BufferedReader sin) {
-		new Thread(new Runnable() {
+		Thread.ofVirtual().start(new Runnable() {
 			String msgFromSocket = "";
 			@Override
 			public void run() {
@@ -62,6 +62,6 @@ class ApplicationAma {
 				}
 				
 			}
-		}).start(); 
+		}); 
 	}
 }

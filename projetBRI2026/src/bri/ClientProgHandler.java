@@ -1,10 +1,16 @@
 package bri;
 
 
-import java.io.*;
-
-import java.net.*;
-import java.nio.charset.MalformedInputException;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.MalformedURLException;
+import java.net.Socket;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.net.URLConnection;
 
 import javax.security.auth.login.FailedLoginException;
 
@@ -40,20 +46,20 @@ class ClientProgHandler implements Runnable {
 			String inputUser;
 			while(continueBoucle) {
 				inputUser = bufferedReader.readLine();
-				System.out.println(inputUser.getClass());
+				
 
 				if(inputUser == null)
 					break;
 				continueBoucle = progAction(inputUser);
-				System.out.println(continueBoucle);
+				
 			}
 			closeEverything();
-			System.out.println(Thread.currentThread().isInterrupted());
+			
 
 		} catch (IOException e) {		
 			
 			closeEverything();
-			System.out.println(Thread.currentThread().isInterrupted());
+			
 
 
 		} 
@@ -73,7 +79,7 @@ class ClientProgHandler implements Runnable {
 				while(!serviceValide) {
 					try {
 						inputUsera = bufferedReader.readLine();
-						System.out.println(inputUsera.getClass());
+						
 						if(inputUsera == null)
 							throw new IOException();
 						fournirService(inputUsera);
@@ -97,10 +103,12 @@ class ClientProgHandler implements Runnable {
 			return true;
 		case 2: //MAJ_SERVICE
 			try {
-				writer(Integer.toString(ServiceRegistry.getTailleRegistre()));
+				writer(Integer.toString(progAssociated.getNbServices()));
+				if (progAssociated.getNbServices() !=0)	{			
+
 				writer(ServiceRegistry.toStringue(progAssociated));
 				
-				
+
 				try {
 					updateService(bufferedReader.readLine());					
 					writer("true");
@@ -114,6 +122,7 @@ class ClientProgHandler implements Runnable {
 						writer(e.toString());
 						
 					}
+				}
 			}catch (IOException e) {
 				return false;
 			}
@@ -123,9 +132,9 @@ class ClientProgHandler implements Runnable {
 				String portFtpStr = bufferedReader.readLine();
 				int portFtpNew = Integer.parseInt(portFtpStr);
 				int oldPort = this.progAssociated.getFtpPort();
-				System.out.println("Port du user changé : " + this.progAssociated.getFtpPort());
+				
 				changerPortFtp(portFtpNew);
-				System.out.println(" ---> " + this.progAssociated.getFtpPort());
+				
 				writer("true");
 				writer("Changement de port : " + oldPort 
 				+ " ---> " + this.progAssociated.getFtpPort());
@@ -140,13 +149,15 @@ class ClientProgHandler implements Runnable {
 			return true;
 		case 4: //Démarrer/Arreter_SERVICE
 			try {
-				System.out.println(progAssociated.getNbServices());
-				writer(Integer.toString(ServiceRegistry.getTailleRegistre()));
-				writer(ServiceRegistry.toStringueStatus(progAssociated));
 				
+				writer(Integer.toString(progAssociated.getNbServices()));
+				if (progAssociated.getNbServices() !=0)	{			
+
+					writer(ServiceRegistry.toStringueStatus(progAssociated));
+
 				String serviceChangeStr = bufferedReader.readLine();
 				int serviceChangeStatus = Integer.parseInt(serviceChangeStr);
-				ServiceRegistry.changeStatus(serviceChangeStatus, progAssociated);
+				ServiceRegistry.changeStatus(serviceChangeStatus, progAssociated);}
 			}catch (IOException e) {
 				return false;			
 			}catch (IndexOutOfBoundsException e) {
@@ -156,11 +167,12 @@ class ClientProgHandler implements Runnable {
 		case 5: //DESINSTALLER_SERVICE
 			try {
 				writer(Integer.toString(progAssociated.getNbServices()));
+				if (progAssociated.getNbServices() !=0)	{			
+
 				writer(ServiceRegistry.toStringue(progAssociated));
-								
 				String serviceChangeStr = bufferedReader.readLine();
 				int serviceChangeStatus = Integer.parseInt(serviceChangeStr);
-				ServiceRegistry.desinstallerService(serviceChangeStatus, progAssociated);
+				ServiceRegistry.desinstallerService(serviceChangeStatus, progAssociated);}
 			}catch (IOException e) {
 				return false;			
 			}catch (IndexOutOfBoundsException e) {
@@ -186,14 +198,14 @@ class ClientProgHandler implements Runnable {
 
 	private synchronized void fournirService(String inputUser) throws NoServiceException, ServiceInvalideException, IOException {
 		
-		System.out.println(progAssociated.getUrlProg());
+		
 		try {
 		URLClassLoader urlcl = URLClassLoader.newInstance(
 				new URL[] { new URL(progAssociated.getUrlProg())});
 		
 			ServiceRegistry.addService(
 					urlcl.loadClass(inputUser).asSubclass(Service.class), this.progAssociated);
-			System.out.println("Classe chargée");
+			
 		}catch (MalformedURLException e) {
 			System.err.println(e);
 			e.printStackTrace();
@@ -202,7 +214,7 @@ class ClientProgHandler implements Runnable {
 
 		}catch (ClassNotFoundException e) {
 			e.printStackTrace();
-			System.err.println(e.getCause().getMessage());
+			
 			throw new NoServiceException();		
 		}catch (RuntimeException e) {
 			System.err.println(e);
@@ -217,13 +229,13 @@ class ClientProgHandler implements Runnable {
 			int idService = ServiceRegistry.getServiceClassId(serviceToUpdate, progAssociated);
 			Class<? extends Service> service = ServiceRegistry.getServiceClassUpdater(idService);
 			String serviceName = service.getPackageName() + "." + service.getSimpleName();
-			System.out.println(serviceName);
+			
 			URLClassLoader urlcl = URLClassLoader.newInstance(
 					new URL[] { new URL(progAssociated.getUrlProg())});
 
 			ServiceRegistry.updateService(
 					urlcl.loadClass(serviceName).asSubclass(Service.class), this.progAssociated , idService);
-			System.out.println("Classe chargée");
+			
 
 		}catch(ServiceInvalideException e) {
 			throw new ServiceInvalideException(e.toString());		
@@ -298,7 +310,7 @@ class ClientProgHandler implements Runnable {
 					}
 				} 
 			
-			System.out.println("le programmeur "  +progAssociated.getLogin()+ " est connecté.");
+			
 			
 			writer(progAssociated.getLogin());
 			
@@ -311,7 +323,7 @@ class ClientProgHandler implements Runnable {
 		
 	}
 	
-	private Prog inscription() throws ProgDejaPresentException, IOException {
+	private synchronized Prog inscription() throws ProgDejaPresentException, IOException {
 		Prog progInput = null;
 		String fileNameURLtemp = "";
 		try {
@@ -331,7 +343,7 @@ class ClientProgHandler implements Runnable {
 
 			fileNameURLtemp= "ftp://localhost:" +Integer.toString(port)
 			+  "/" + log + "/";
-			System.out.println(fileNameURLtemp);
+			
 			if(!verifyConnection(fileNameURLtemp)) {
 				throw new MalformedURLException();
 			}
@@ -344,7 +356,7 @@ class ClientProgHandler implements Runnable {
 			throw e;
 		}
 		ListeProgs.addProg(progInput);
-		System.out.println("Compte crée");
+		
 		return progInput;
 	}
 	
@@ -358,7 +370,7 @@ class ClientProgHandler implements Runnable {
 			if (log.equals("null") || pswd.equals("null"))
 				throw new IOException();
 			
-			System.out.println("l'utilisateur a entrer ses logins " + log + pswd + bufferedReader.ready());
+			
 			if(ListeProgs.searchProg(log) == null)
 				throw new FailedLoginException("Compte inexistant");
 			else if(!ListeProgs.searchProg(log).getMdp().equals(pswd))

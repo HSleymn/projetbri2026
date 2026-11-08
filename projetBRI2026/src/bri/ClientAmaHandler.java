@@ -15,31 +15,44 @@ class ClientAmaHandler implements Runnable {
 	}
 
 	public void run() {
+		BufferedReader in;
+		PrintWriter out;
 		try {
-			BufferedReader in = new BufferedReader (new InputStreamReader(client.getInputStream ( )));
-			PrintWriter out = new PrintWriter (client.getOutputStream ( ), true);
-			out.println(ServiceRegistry.toStringue()+"##Tapez le numéro de service désiré :");
+			 in = new BufferedReader (new InputStreamReader(client.getInputStream ( )));
+			 out = new PrintWriter (client.getOutputStream ( ), true);
+			out.println(ServiceRegistry.toStringue()+"#Tapez le numéro de service désiré :");
 			int choix = Integer.parseInt(in.readLine());
-			// instancier le service numéro "choix" en lui passant la socket "client"
-			Class<? extends Service> classeService = ServiceRegistry.getServiceClass(choix);
-			Service serviceChoisi = null;
+			Class<? extends Service> classeService = null;
+			String url= "";
 			try {
-				serviceChoisi = classeService.getConstructor(Socket.class).newInstance(client);
+				try {
+					classeService = ServiceRegistry.getServiceClass(choix);
+					url = ServiceRegistry.getUrlService(choix);
+				} catch (Exception e) {
+					e.printStackTrace();
+					return;
+				}
+
+				Service serviceChoisi = null;
+				serviceChoisi = classeService.getConstructor(Socket.class, String.class).newInstance(client,url);
+				serviceChoisi.service();
+
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException | NoSuchMethodException | SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				out.println(e);
+				out.println("Veuillez redémarrer l'application");
 			}
 			
 			
-			// invoquer run() pour cette instance ou la lancer dans un thread à part 
-			serviceChoisi.service();
 			}
 		
 		
 		
 		catch (IOException e) {
-			//Fin du service
+
+			return;		
+		} catch (RuntimeException e) {
+			return;
 		}
 
 		try {client.close();} catch (IOException e2) {}
@@ -52,7 +65,6 @@ class ClientAmaHandler implements Runnable {
 		 client.close(); 
 	}
 
-	// lancement du service
 	public void start() {
 		(new Thread(this)).start();		
 	}

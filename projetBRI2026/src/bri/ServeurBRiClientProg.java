@@ -22,28 +22,19 @@ public class ServeurBRiClientProg implements Runnable {
 	}
 
 	
-	@SuppressWarnings("unused")
 	public void run() {
-		//Scanner clavier = new Scanner(System.in);
-		//String fileNameURL = "ftp://localhost:2121/";
 		System.out.println("j'ouvre le serveur BRI aux prog sur le port " + listen_socket.getLocalPort());	
 		while(!listen_socket.isClosed()) {
 
 			try {
 					Socket socket = listen_socket.accept();
-					new Thread(new ClientProgHandler(socket)).start();
-					System.out.println("Un client s'est connecté.");
-					//Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
-					System.out.println(Thread.activeCount());
-				}
+					Thread.startVirtualThread(new ClientProgHandler(socket));
+					}
+				
+					
 			catch (Exception e) {
 					e.printStackTrace();				
-					}
-//			 catch (IOException e) {
-//				e.printStackTrace();
-//			} catch (NullPointerException e) {
-//				System.err.println("aaaaaaaaaaaaaaaaaaaaaaa");
-//			}
+			}
 		}
 			
 	}

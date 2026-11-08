@@ -1,18 +1,18 @@
 package bri;
-import java.util.Vector;
 
-import prog.Prog;
+import prog.IProg;
 
 public class ServiceUploaded {
 	private Class<? extends Service>  service;
-	private Prog prog;
+	private IProg prog;
 	private boolean status;
 	
 	
-	public ServiceUploaded(Class<? extends Service> service, Prog prog) {
+	public ServiceUploaded(Class<? extends Service> service, IProg prog) {
 		this.service = service;
 		this.prog = prog;
 		this.status = true;
+		prog.incrementsNbServices();
 	}
 	
 	public Class<? extends Service>  getService() {
@@ -21,10 +21,10 @@ public class ServiceUploaded {
 	public void setService(Class<? extends Service>  serviceInput) {
 		this.service = serviceInput;
 	}
-	public Prog getProg() {
+	public IProg getProg() {
 		return prog;
 	}
-	public void setProg(Prog progInput) {
+	public void setProg(IProg progInput) {
 		this.prog = progInput;
 	}
 	public boolean getStatus() {

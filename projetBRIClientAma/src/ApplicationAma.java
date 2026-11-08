@@ -17,42 +17,51 @@ import java.net.Socket;
 class ApplicationAma {
 		private final static int PORT_SERVICE = 3030;
 		private final static String HOST = "localhost"; 
-	
+		
 	public static void main(String[] args) {
 		Socket s = null;		
 		try {
 			s = new Socket(HOST, PORT_SERVICE);
-
+			
 			BufferedReader sin = new BufferedReader (new InputStreamReader(s.getInputStream ( )));
 			PrintWriter sout = new PrintWriter (s.getOutputStream ( ), true);
 			BufferedReader clavier = new BufferedReader(new InputStreamReader(System.in));			
 		
 			System.out.println("Connecté au serveur " + s.getInetAddress() + ":"+ s.getPort());
 			
-			String line;
-		// menu et choix du service
 			
-			line = sin.readLine();
-			System.out.println(line.replaceAll("##", "\n"));
-			
-		// saisie/envoie du choix
-			
-			sout.println(clavier.readLine());
-			
-		// r�ception/affichage de la question
-			System.out.println(sin.readLine());
-			
-		// saisie clavier/envoie au service de la r�ponse
-			sout.println(clavier.readLine());
-			
-		// r�ception/affichage de la r�ponse
-			System.out.println(sin.readLine());
+				listen(s, sin);
+				while (s.isConnected())
+				sout.println(clavier.readLine());
+								
 				
 			
 		}
 		catch (IOException e) { System.err.println("Fin de la connexion"); }
 		// Refermer dans tous les cas la socket
 		try { if (s != null) s.close(); } 
-		catch (IOException e2) { ; }		
+		catch (IOException e2) { ; }	
+		return;
+	}
+	
+	public static void listen(Socket s, BufferedReader sin) {
+		new Thread(new Runnable() {
+			String msgFromSocket = "";
+			@Override
+			public void run() {
+				while(msgFromSocket != null) {
+					try {
+						msgFromSocket = sin.readLine();
+						if(msgFromSocket!=null)
+							System.out.println(msgFromSocket.replaceAll("#", "\n"));
+					} catch (IOException e) {
+						//closeEverything();
+						System.err.println("aaaaaaaaa");
+					}
+					
+				}
+				
+			}
+		}).start(); 
 	}
 }

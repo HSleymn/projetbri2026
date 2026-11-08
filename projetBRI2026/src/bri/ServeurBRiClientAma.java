@@ -26,7 +26,7 @@ public class ServeurBRiClientAma implements Runnable {
 
 			try {
 					Socket socket = listen_socket.accept();
-					new Thread(new ClientAmaHandler(socket)).start();
+					Thread.startVirtualThread(new ClientAmaHandler(socket));
 					System.out.println("Un amateur s'est connecté.");
 				}
 			catch (Exception e) {
